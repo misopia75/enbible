@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scripture Study EN - KJV Complete Edition</title>
+    <style>
+        :root {
+            --bg-primary: #0f172a;
+            --bg-secondary: #1e293b;
+            --bg-tertiary: #334155;
+            --text-primary: #f1f5f9;
+            --text-secondary: #cbd5e1;
+            --text-tertiary: #94a3b8;
+            --accent-gold: #f4d03f;
+            --highlight-gold: rgba(244, 208, 63, 0.08);
+            --border-color: #475569;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            background-color: var(--bg-primary); color: var(--text-primary);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            overflow: hidden; height: 100vh;
+        }
+        header {
+            position: fixed; top: 0; left: 0; right: 0; height: 70px;
+            background: rgba(30, 41, 59, 0.95); border-bottom: 1px solid var(--border-color);
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 0 24px; z-index: 30;
+        }
+        .logo-title { font-size: 18px; font-weight: bold; }
+        .controls { display: flex; gap: 10px; }
+        select {
+            background-color: var(--bg-tertiary); color: var(--text-primary);
+            border: 1px solid var(--border-color); padding: 8px 12px; border-radius: 6px;
+            font-size: 14px; outline: none; cursor: pointer; min-width: 160px;
+        }
+        .main-container { display: flex; margin-top: 70px; height: calc(100vh - 70px); position: relative; }
+        main { flex: 1; overflow-y: auto; padding: 40px 24px; }
+        .content-box { max-w: 700px; margin: 0 auto; }
+        .title-section { border-bottom: 1px solid var(--border-color); padding-bottom: 16px; margin-bottom: 24px; }
+        .title-section h2 { font-size: 28px; color: var(--accent-gold); }
+        .bible-text-area { font-size: 18px; line-height: 1.9; word-break: keep-all; }
+        .verse-row { padding: 10px 12px; border-radius: 8px; cursor: pointer; transition: background 0.2s; margin-bottom: 4px; }
+        .verse-row:hover { background-color: var(--highlight-gold); box-shadow: inset 3px 0 0 var(--accent-gold); }
+        .verse-num { font-weight: bold; color: var(--accent-gold); margin-right: 12px; }
+        
+        /* Side Panel */
+        .side-panel {
+            position: fixed; top: 0; right: -450px; width: 450px; height: 100vh;
+            background-color: var(--bg-secondary); border-left: 1px solid var(--border-color);
+            transition: right 0.3s ease; z-index: 50; overflow-y: auto; padding: 24px;
+        }
+        .side-panel.active { right: 0; }
+        .panel-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 16px; margin-bottom: 20px; }
+        .panel-close { background: none; border: none; font-size: 20px; color: var(--text-tertiary); cursor: pointer; }
+        .study-card { background-color: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 8px; padding: 16px; margin-bottom: 20px; }
+        .card-title { font-size: 12px; color: var(--text-tertiary); margin-bottom: 8px; font-weight: bold; }
+        .btn-link { display: block; width: 100%; text-align: center; background-color: #eab308; color: #0f172a; padding: 12px; border-radius: 6px; text-decoration: none; font-weight: bold; font-size: 14px; margin-top: 10px; }
+        .btn-link-sub { background-color: transparent; color: var(--accent-gold); border: 1px solid var(--border-color); }
+        .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 40; display: none; }
+        .overlay.active { display: block; }
+        .loading { font-style: italic; color: var(--text-tertiary); text-align: center; padding: 30px; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="logo-title">📖 Scripture Study EN (KJV)</div>
+        <div class="controls">
+            <select id="bookSelect" onchange="updateChapters()">
+                <option value="gn|50|Genesis">창세기 (Genesis)</option>
+                <option value="ex|40|Exodus">출애굽기 (Exodus)</option>
+                <option value="lv|27|Leviticus">레위기 (Leviticus)</option>
+                <option value="nm|36|Numbers">민수기 (Numbers)</option>
+                <option value="dt|34|Deuteronomy">신명기 (Deuteronomy)</option>
+                <option value="js|24|Joshua">여호수아 (Joshua)</option>
+                <option value="jg|21|Judges">사사기 (Judges)</option>
+                <option value="rt|4|Ruth">룻기 (Ruth)</option>
+                <option value="1s|31|1_Samuel">사무엘상 (1 Samuel)</option>
+                <option value="2s|24|2_Samuel">사무엘하 (2 Samuel)</option>
+                <option value="1k|22|1_Kings">열왕기상 (1 Kings)</option>
+                <option value="2k|25|2_Kings">열왕기하 (2 Kings)</option>
+                <option value="1ch|29|1_Chronicles">역대기상 (1 Chronicles)</option>
+                <option value="2ch|36|2_Chronicles">역대기하 (2 Chronicles)</option>
+                <option value="ez|10|Ezra">에스라 (Ezra)</option>
+                <option value="ne|13|Nehemiah">느헤미야 (Nehemiah)</option>
+                <option value="et|10|Esther">에스더 (Esther)</option>
+                <option value="jb|42|Job">욥기 (Job)</option>
+                <option value="ps|150|Psalms">시편 (Psalms)</option>
+                <option value="pr|31|Proverbs">잠언 (Proverbs)</option>
+                <option value="ec|12|Ecclesiastes">전도서 (Ecclesiastes)</option>
+                <option value="sn|8|Song_of_Solomon">아가 (Song of Solomon)</option>
+                <option value="is|66|Isaiah">이사야 (Isaiah)</option>
+                <option value="jr|52|Jeremiah">예레미야 (Jeremiah)</option>
+                <option value="lm|5|Lamentations">예레미야 애가 (Lamentations)</option>
+                <option value="ezk|48|Ezekiel">에스겔 (Ezekiel)</option>
+                <option value="dn|12|Daniel">다니엘 (Daniel)</option>
+                <option value="ho|14|Hosea">호세아 (Hosea)</option>
+                <option value="jl|3|Joel">요엘 (Joel)</option>
+                <option value="am|9|Amos">아모스 (Amos)</option>
+                <option value="ob|1|Obadiah">오바디야 (Obadiah)</option>
+                <option value="jn|4|Jonah">요나 (Jonah)</option>
+                <option value="mi|7|Micah">미가 (Micah)</option>
+                <option value="na|3|Nahum">나훔 (Nahum)</option>
+                <option value="hb|3|Habakkuk">하박국 (Habakkuk)</option>
+                <option value="zp|3|Zephaniah">스바냐 (Zephaniah)</option>
+                <option value="hg|2|Haggai">학개 (Haggai)</option>
+                <option value="zec|14|Zechariah">스가랴 (Zechariah)</option>
+                <option value="mal|4|Malachi">말라기 (Malachi)</option>
+                <option value="mt|28|Matthew">마태복음 (Matthew)</option>
+                <option value="mk|16|Mark">마가복음 (Mark)</option>
+                <option value="lk|24|Luke">누가복음 (Luke)</option>
+                <option value="jo|21|John">요한복음 (John)</option>
+                <option value="act|28|Acts">사도행전 (Acts)</option>
+                <option value="rm|16|Romans">로마서 (Romans)</option>
+                <option value="1co|16|1_Corinthians">고린도전서 (1 Corinthians)</option>
+                <option value="2co|13|2_Corinthians">고린도후서 (2 Corinthians)</option>
+                <option value="gal|6|Galatians">갈라디아서 (Galatians)</option>
+                <option value="eph|6|Ephesians">에베소서 (Ephesians)</option>
+                <option value="ph|4|Philippians">빌립보서 (Philippians)</option>
+                <option value="cl|4|Colossians">골로새서 (Colossians)</option>
+                <option value="1th|5|1_Thessalonians">데살로니가전서 (1 Thessalonians)</option>
+                <option value="2th|3|2_Thessalonians">데살로니가후서 (2 Thessalonians)</option>
+                <option value="1tm|6|1_Timothy">디모데전서 (1 Timothy)</option>
+                <option value="2tm|4|2_Timothy">디모데후서 (2 Timothy)</option>
+                <option value="tt|3|Titus">디도서 (Titus)</option>
+                <option value="phm|1|Philemon">빌레몬서 (Philemon)</option>
+                <option value="hb|13|Hebrews">히브리서 (Hebrews)</option>
+                <option value="jm|5|James">야고보서 (James)</option>
+                <option value="1pe|5|1_Peter">베드로전서 (1 Peter)</option>
+                <option value="2pe|3|2_Peter">베드로후서 (2 Peter)</option>
+                <option value="1jo|5|1_John">요한일서 (1 John)</option>
+                <option value="2jo|1|2_John">요한이서 (2 John)</option>
+                <option value="3jo|1|3_John">요한삼서 (3 John)</option>
+                <option value="jd|1|Jude">유다서 (Jude)</option>
+                <option value="rv|22|Revelation">요한계시록 (Revelation)</option>
+            </select>
+            
+            <select id="chapterSelect" onchange="fetchBibleContent()"></select>
+        </div>
+    </header>
+
+    <div class="main-container">
+        <main>
+            <div class="content-box">
+                <div class="title-section">
+                    <h2 id="chapterTitle">Genesis 1</h2>
+                    <p style="font-size: 13px; color: var(--text-tertiary); margin-top: 5px;">King James Version (KJV) Real-time Engine · Click verse for Deep Study Hub.</p>
+                </div>
+                <div id="bibleContent" class="bible-text-area"></div>
+            </div>
+        </main>
+
+        <div class="side-panel" id="sidePanel">
+            <div class="panel-header">
+                <div>
+                    <h3 style="color: var(--accent-gold);">Study Panel</h3>
+                    <p id="panelSubtitle" style="font-size: 12px; color: var(--text-tertiary);"></p>
+                </div>
+                <button class="panel-close" onclick="hidePanel()">✕</button>
+            </div>
+            
+            <div class="card-title">Selected Verse</div>
+            <div class="study-card" style="background-color: rgba(0,0,0,0.15);">
+                <p id="selectedVerseText" style="font-style: italic; font-size: 14px; line-height: 1.5;"></p>
+            </div>
+
+            <div class="card-title">Lexicon & Commentary</div>
+            <div class="study-card">
+                <a id="lexiconLink" href="#" target="_blank" class="btn-link">🔍 Analyze Original Words (BLB)</a>
+            </div>
+
+            <div class="card-title">Cross-References</div>
+            <div class="study-card">
+                <a id="crossRefLink" href="#" target="_blank" class="btn-link btn-link-sub">🔗 View Cross-References</a>
+            </div>
+        </div>
+
+        <div class="overlay" id="panelOverlay" onclick="hidePanel()"></div>
+    </div>
+
+    <script>
+        const bSel = document.getElementById('bookSelect');
+        const cSel = document.getElementById('chapterSelect');
+        const cArea = document.getElementById('bibleContent');
+        const sPanel = document.getElementById('sidePanel');
+        const oLay = document.getElementById('panelOverlay');
+        const cTitle = document.getElementById('chapterTitle');
+
+        function updateChapters() {
+            const info = bSel.value.split('|');
+            const totalCh = parseInt(info[1]);
+            
+            cSel.innerHTML = '';
+            for (let i = 1; i <= totalCh; i++) {
+                const opt = document.createElement('option');
+                opt.value = i;
+                opt.textContent = "Chapter " + i;
+                cSel.appendChild(opt);
+            }
+            fetchBibleContent();
+        }
+
+        async function fetchBibleContent() {
+            cArea.innerHTML = '<div class="loading">Loading scriptures...</div>';
+            
+            const info = bSel.value.split('|');
+            const enBookName = info[2].replace(/_/g, ' '); 
+            const currentCh = cSel.value || 1;
+
+            cTitle.textContent = enBookName + " " + currentCh;
+
+            try {
+                const res = await fetch(`https://bible-api.com/${enBookName}+${currentCh}?translation=kjv`);
+                if (!res.ok) throw new Error();
+                const data = await res.json();
+
+                cArea.innerHTML = '';
+                
+                data.verses.forEach(v => {
+                    const row = document.createElement('div');
+                    row.className = 'verse-row';
+                    row.innerHTML = `<span class="verse-num">${v.verse}</span>${v.text}`;
+                    
+                    row.addEventListener('click', () => {
+                        document.getElementById('panelSubtitle').textContent = `${enBookName} ${currentCh}:${v.verse}`;
+                        document.getElementById('selectedVerseText').textContent = `"${v.text.trim()}"`;
+                        
+                        const queryStr = encodeURIComponent(`${info[2]} ${currentCh}:${v.verse}`);
+                        document.getElementById('lexiconLink').href = `https://www.blueletterbible.org/search/preSearch.cfm?Criteria=${queryStr}&t=KJV`;
+                        document.getElementById('crossRefLink').href = `https://www.openbible.info/labs/cross-references/search?q=${queryStr}`;
+                        
+                        sPanel.classList.add('active');
+                        oLay.classList.add('active');
+                    });
+                    
+                    cArea.appendChild(row);
+                });
+
+            } catch (err) {
+                cArea.innerHTML = '<div class="loading" style="color: #ef4444;">Failed to load data. Please refresh or check the network.</div>';
+            }
+        }
+
+        function hidePanel() {
+            sPanel.classList.remove('active');
+            oLay.classList.remove('active');
+        }
+
+        updateChapters();
+    </script>
+</body>
+</html>
